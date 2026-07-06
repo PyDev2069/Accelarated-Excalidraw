@@ -1,11 +1,15 @@
-import "@excalidraw/excalidraw/index.css";
-import { Excalidraw } from "@excalidraw/excalidraw";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
+import HomePage from "./pages/HomePage.jsx";
+import WhiteboardPage from "./pages/WhiteboardPage.jsx";
 
 function App() {
   return (
-    <div style={{ height: "100vh", width: "100vw" }}>
-      <Excalidraw />
-    </div>
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<HomePage />} />
+        <Route path="/board" element={<WhiteboardPage />} />
+      </Routes>
+    </BrowserRouter>
   );
 }
 
