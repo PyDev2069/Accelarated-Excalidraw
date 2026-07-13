@@ -1,8 +1,97 @@
+@import url("https://fonts.googleapis.com/css2?family=Caveat:wght@500;700&family=Inter:wght@400;500;600;700&display=swap");
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Required for Excalidraw: height:100% only works if every
+   ancestor in the chain also has an explicit height. */
 html,
 body,
 #root {
-  margin: 0;
-  padding: 0;
   height: 100%;
-  width: 100%;
+  margin: 0;
+}
+
+/* Custom keyframes referenced from HomePage.jsx via Tailwind's
+   arbitrary animate-[name_duration_timing_...] syntax. Tailwind only
+   generates the `animation:` property from arbitrary values — the
+   @keyframes themselves still need to live in plain CSS somewhere,
+   which is here. */
+
+@keyframes float-up-fade {
+  from { opacity: 0; transform: translateY(14px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes wiggle {
+  0%, 100% { transform: rotate(var(--r, 0deg)); }
+  50% { transform: rotate(calc(var(--r, 0deg) * -1)); }
+}
+@keyframes draw-path {
+  to { stroke-dashoffset: 0; }
+}
+@keyframes pop-in {
+  from { opacity: 0; transform: scale(0.85); }
+  to { opacity: 1; transform: scale(1); }
+}
+@keyframes drop-in {
+  0% { opacity: 0; transform: translateY(-30px) rotate(-6deg); }
+  60% { opacity: 1; transform: translateY(4px) rotate(2deg); }
+  100% { opacity: 1; transform: translateY(0) rotate(0deg); }
+}
+@keyframes pulse-check {
+  0% { opacity: 0; transform: scale(0.5); }
+  60% { opacity: 1; transform: scale(1.15); }
+  100% { opacity: 1; transform: scale(1); }
+}
+@keyframes marching-ants {
+  to { stroke-dashoffset: -20; }
+}
+@keyframes bob-idle {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  50% { transform: translateY(-6px) rotate(0.4deg); }
+}
+@keyframes tape-in {
+  from { opacity: 0; transform: translateX(-50%) rotate(-14deg) scale(0.4); }
+  to { opacity: 1; transform: translateX(-50%) rotate(-10deg) scale(1); }
+}
+@keyframes btn-wobble {
+  0%, 100% { transform: translate(-2px, -2px) rotate(0deg); }
+  35% { transform: translate(-2px, -3px) rotate(-1.2deg); }
+  65% { transform: translate(-3px, -2px) rotate(1deg); }
+}
+@keyframes highlight-sweep {
+  to { background-size: 100% 100%; }
+}
+
+/* Reveal-on-scroll: base state + the "in-view" state toggled by JS.
+   Tailwind has no scroll-triggered variant, so this stays as plain CSS. */
+.reveal {
+  opacity: 0;
+  transform: translateY(18px);
+  transition: opacity 0.6s ease, transform 0.6s ease;
+}
+.reveal.in-view {
+  opacity: 1;
+  transform: translateY(0);
+}
+.reveal-stagger > * {
+  opacity: 0;
+  transform: translateY(16px);
+  transition: opacity 0.5s ease, transform 0.5s ease;
+}
+.reveal-stagger.in-view > * {
+  opacity: 1;
+  transform: translateY(0);
+}
+.reveal-stagger.in-view > *:nth-child(1) { transition-delay: 0.05s; }
+.reveal-stagger.in-view > *:nth-child(2) { transition-delay: 0.12s; }
+.reveal-stagger.in-view > *:nth-child(3) { transition-delay: 0.19s; }
+.reveal-stagger.in-view > *:nth-child(4) { transition-delay: 0.26s; }
+.reveal-stagger.in-view > *:nth-child(5) { transition-delay: 0.33s; }
+.reveal-stagger.in-view > *:nth-child(6) { transition-delay: 0.4s; }
+.reveal-stagger.in-view > *:nth-child(7) { transition-delay: 0.47s; }
+
+@media (prefers-reduced-motion: reduce) {
+  * { animation: none !important; transition: none !important; }
 }
