@@ -25,10 +25,10 @@ function Hero() {
         </p>
         <div className="reveal flex gap-4 justify-center flex-wrap mb-12">
           <Link
-            to="/board"
+            to="/dashboard"
             className="inline-block py-3 px-6 rounded-lg font-semibold bg-indigo text-paper border-2 border-ink shadow-[3px_3px_0_#1b1b1f] transition-all duration-150 ease-in-out hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-[5px_5px_0_#1b1b1f] hover:bg-indigo-light hover:animate-[btn-wobble_0.5s_ease_1] active:translate-x-0 active:translate-y-0 active:shadow-[1px_1px_0_#1b1b1f]"
           >
-            Open Whiteboard &rarr;
+            Open Dashboard &rarr;
           </Link>
           <a
             href="https://github.com/PyDev2069/Accelarated-Excalidraw"
