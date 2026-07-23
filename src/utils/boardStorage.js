@@ -49,7 +49,23 @@ export function loadBoard(id) {
 
 /** Saves elements + appState for a board and bumps its updatedAt. */
 export function saveBoard(id, elements, appState) {
-  localStorage.setItem(dataKey(id), JSON.stringify({ elements, appState }));
+  // Filter deleted elements — Excalidraw keeps them internally but we don't
+  // need to persist them, and they can bloat/corrupt storage on reload.
+  const cleanElements = elements.filter((el) => !el.isDeleted);
+
+  // Only persist the appState fields that are safe to restore.
+  // Saving the full appState includes Maps, Sets, and other non-serialisable
+  // values that silently corrupt on JSON round-trip.
+  const cleanAppState = {
+    viewBackgroundColor: appState.viewBackgroundColor,
+    gridSize: appState.gridSize,
+    scrollX: appState.scrollX,
+    scrollY: appState.scrollY,
+    zoom: appState.zoom,
+  };
+
+  localStorage.setItem(dataKey(id), JSON.stringify({ elements: cleanElements, appState: cleanAppState }));
+
   const index = readIndex().map((m) =>
     m.id === id ? { ...m, updatedAt: Date.now() } : m
   );
@@ -68,4 +84,39 @@ export function renameBoard(id, newName) {
 export function deleteBoard(id) {
   writeIndex(readIndex().filter((m) => m.id !== id));
   localStorage.removeItem(dataKey(id));
+}
+
+
+
+
+const snippetsKey = (boardId) => `boards:snippets:${boardId}`;
+
+export function loadSnippets(boardId) {
+  try {
+    return JSON.parse(localStorage.getItem(snippetsKey(boardId)) || "{}");
+  } catch {
+    return {};
+  }
+}
+
+// snippets[elementId] is now { python: "...", javascript: "...", ... }
+// each language key is independent
+export function saveSnippet(boardId, elementId, language, code) {
+  const all = loadSnippets(boardId);
+  if (!all[elementId]) all[elementId] = {};
+  all[elementId][language] = code;
+  localStorage.setItem(snippetsKey(boardId), JSON.stringify(all));
+}
+
+export function deleteSnippet(boardId, elementId, language) {
+  const all = loadSnippets(boardId);
+  if (!all[elementId]) return;
+  // if language passed, delete just that language's code
+  // if no language passed, delete all snippets for the element
+  if (language) {
+    delete all[elementId][language];
+  } else {
+    delete all[elementId];
+  }
+  localStorage.setItem(snippetsKey(boardId), JSON.stringify(all));
 }

@@ -2,47 +2,53 @@ import { useEffect, useRef, useCallback, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import "@excalidraw/excalidraw/index.css";
 import { Excalidraw } from "@excalidraw/excalidraw";
-import { loadBoard, saveBoard, renameBoard, listBoards } from "../utils/boardStorage";
+import {
+  loadBoard,
+  saveBoard,
+  renameBoard,
+  listBoards,
+  loadSnippets,
+} from "../utils/boardStorage";
+import CodeSidebar, { isSupportedElement } from "../components/CodeSidebar";
 
-// How long to wait after the last drawing action before saving (ms).
 const AUTOSAVE_DEBOUNCE = 1000;
 
 function WhiteboardPage() {
-  const { boardId } = useParams();          // comes from /board/:boardId
+  const { boardId } = useParams();
   const navigate = useNavigate();
 
-  const excalidrawAPIRef = useRef(null);    // Excalidraw API handle
-  const saveTimerRef = useRef(null);         // debounce timer
-  const initialDataRef = useRef(null);       // loaded once on mount
+  const excalidrawAPIRef = useRef(null);
+  const saveTimerRef = useRef(null);
+  const initialDataRef = useRef(null);
 
   const [boardName, setBoardName] = useState("Untitled board");
   const [isRenamingName, setIsRenamingName] = useState(false);
   const [renameValue, setRenameValue] = useState("");
-  const [saveStatus, setSaveStatus] = useState("saved"); // "saved" | "saving"
+  const [saveStatus, setSaveStatus] = useState("saved");
+  const [selectedElement, setSelectedElement] = useState(null);
+  const [snippets, setSnippets] = useState({});
+  const [ready, setReady] = useState(false);
 
-  // ── load board once on mount ─────────────────────────────────────────────
   useEffect(() => {
     const data = loadBoard(boardId);
     if (!data) {
-      // board id not found — go back to dashboard
       navigate("/dashboard", { replace: true });
       return;
     }
     initialDataRef.current = {
       elements: data.elements,
-      appState: {
-        ...data.appState,
-        // always re-open in a clean state for these UI flags
-        collaborators: [],
-      },
+      appState: { ...data.appState, collaborators: [] },
     };
-
-    // get name from the index
     const meta = listBoards().find((b) => b.id === boardId);
     if (meta) setBoardName(meta.name);
+    setSnippets(loadSnippets(boardId));
+    setReady(true);
   }, [boardId, navigate]);
 
-  // ── debounced auto-save on every canvas change ───────────────────────────
+  function refreshSnippets() {
+    setSnippets(loadSnippets(boardId));
+  }
+
   const handleChange = useCallback(
     (elements, appState) => {
       setSaveStatus("saving");
@@ -51,16 +57,24 @@ function WhiteboardPage() {
         saveBoard(boardId, elements, appState);
         setSaveStatus("saved");
       }, AUTOSAVE_DEBOUNCE);
+
+      const selectedIds = Object.keys(appState.selectedElementIds || {}).filter(
+        (id) => appState.selectedElementIds[id]
+      );
+      if (selectedIds.length === 1) {
+        const el = elements.find((e) => e.id === selectedIds[0]);
+        setSelectedElement(isSupportedElement(el) ? el : null);
+      } else {
+        setSelectedElement(null);
+      }
     },
     [boardId]
   );
 
-  // ── rename helpers ───────────────────────────────────────────────────────
   function startRename() {
     setRenameValue(boardName);
     setIsRenamingName(true);
   }
-
   function commitRename() {
     const trimmed = renameValue.trim() || "Untitled board";
     renameBoard(boardId, trimmed);
@@ -68,35 +82,22 @@ function WhiteboardPage() {
     setIsRenamingName(false);
   }
 
-  // ── render ────────────────────────────────────────────────────────────────
   return (
     <div style={{ height: "100vh", width: "100vw", display: "flex", flexDirection: "column" }}>
 
-      {/* Thin top bar — sits above the Excalidraw canvas */}
-      <div
-        style={{
-          height: 44,
-          flexShrink: 0,
-          display: "flex",
-          alignItems: "center",
-          gap: 12,
-          padding: "0 14px",
-          borderBottom: "1px solid #e5e1d8",
-          background: "#fffdf7",
-          zIndex: 10,
-        }}
-      >
-        {/* Back to dashboard */}
+      {/* Top bar */}
+      <div style={{
+        height: 44, flexShrink: 0, display: "flex", alignItems: "center",
+        gap: 12, padding: "0 14px", borderBottom: "1px solid #e5e1d8",
+        background: "#fffdf7", zIndex: 10,
+      }}>
         <button
           onClick={() => navigate("/dashboard")}
           style={{ fontFamily: "Caveat, cursive", fontSize: 18, color: "#6965db", background: "none", border: "none", cursor: "pointer" }}
         >
           ← Boards
         </button>
-
         <div style={{ width: 1, height: 20, background: "#e5e1d8" }} />
-
-        {/* Board name / rename inline */}
         {isRenamingName ? (
           <input
             autoFocus
@@ -107,16 +108,7 @@ function WhiteboardPage() {
               if (e.key === "Enter") commitRename();
               if (e.key === "Escape") setIsRenamingName(false);
             }}
-            style={{
-              fontFamily: "Inter, sans-serif",
-              fontSize: 13,
-              fontWeight: 500,
-              border: "1px solid #6965db",
-              borderRadius: 6,
-              padding: "2px 8px",
-              outline: "none",
-              minWidth: 180,
-            }}
+            style={{ fontFamily: "Inter, sans-serif", fontSize: 13, fontWeight: 500, border: "1px solid #6965db", borderRadius: 6, padding: "2px 8px", outline: "none", minWidth: 180 }}
           />
         ) : (
           <span
@@ -127,8 +119,6 @@ function WhiteboardPage() {
             {boardName}
           </span>
         )}
-
-        {/* Rename button */}
         <button
           onClick={startRename}
           title="Rename board"
@@ -136,20 +126,30 @@ function WhiteboardPage() {
         >
           ✏️
         </button>
-
-        {/* Auto-save status */}
         <span style={{ marginLeft: "auto", fontSize: 11, color: "#6b6b76" }}>
           {saveStatus === "saving" ? "Saving…" : "✓ Saved"}
         </span>
       </div>
 
-      {/* Excalidraw fills the rest */}
-      <div style={{ flex: 1, minHeight: 0 }}>
-        <Excalidraw
-          excalidrawAPI={(api) => (excalidrawAPIRef.current = api)}
-          initialData={initialDataRef.current}
-          onChange={handleChange}
-        />
+      {/* Canvas + sidebar */}
+      <div style={{ flex: 1, minHeight: 0, display: "flex" }}>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          {ready && (
+            <Excalidraw
+              excalidrawAPI={(api) => (excalidrawAPIRef.current = api)}
+              initialData={initialDataRef.current}
+              onChange={handleChange}
+            />
+          )}
+        </div>
+        {selectedElement && (
+          <CodeSidebar
+            boardId={boardId}
+            selectedElement={selectedElement}
+            snippets={snippets}
+            onSnippetChange={refreshSnippets}
+          />
+        )}
       </div>
     </div>
   );
