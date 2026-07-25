@@ -14,6 +14,32 @@ export function saveFavoriteIds(ids) {
   localStorage.setItem(FAVORITES_KEY, JSON.stringify([...ids]));
 }
 
+// ── light/dark theme ──────────────────────────────────────────────────────
+const THEME_KEY = "whiteboard-dashboard-theme";
+
+export function getInitialTheme() {
+  try {
+    const stored = localStorage.getItem(THEME_KEY);
+    if (stored === "dark" || stored === "light") return stored;
+  } catch {
+    // localStorage unavailable — fall through to system preference
+  }
+  if (typeof window !== "undefined" && window.matchMedia?.("(prefers-color-scheme: dark)").matches) {
+    return "dark";
+  }
+  return "light";
+}
+
+export function applyTheme(theme) {
+  if (typeof document === "undefined") return;
+  document.documentElement.classList.toggle("dark", theme === "dark");
+  try {
+    localStorage.setItem(THEME_KEY, theme);
+  } catch {
+    // ignore write failures (private mode, quota, etc.)
+  }
+}
+
 export function timeAgo(ts) {
   const diff = Date.now() - ts;
   const mins = Math.floor(diff / 60000);
@@ -57,4 +83,8 @@ export const DATE_FILTERS = [
 export const SORTS = [
   { key: "recent", label: "Recent" },
   { key: "name", label: "Name A–Z" },
+];
+export const STAR_FILTERS = [
+  { key: "all", label: "All boards" },
+  { key: "starred", label: "Starred only" },
 ];

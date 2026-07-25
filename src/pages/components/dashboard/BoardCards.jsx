@@ -1,5 +1,5 @@
 import PlaceholderArt from "./PlaceholderArt";
-import { Avatar, CardMenu } from "./DashboardControls";
+import { CardMenu } from "./DashboardControls";
 import { timeAgo, formatDate } from "./dashboardUtils";
 
 // ── Card used for both Recent Boards and grid view ──────────────────────
@@ -22,10 +22,10 @@ export function RecentCard({
   onCancelRename,
 }) {
   return (
-    <div className="group bg-white border border-[#E5E7EB] rounded-2xl overflow-hidden hover:shadow-[0_8px_24px_rgba(79,70,229,0.12)] hover:border-[#C7D2FE] hover:-translate-y-0.5 transition-all duration-300">
+    <div className="group bg-white dark:bg-[#1E2432] border border-[#E5E7EB] dark:border-[#333B4D] rounded-2xl shadow-sm dark:shadow-none hover:shadow-[0_8px_24px_rgba(79,70,229,0.12)] hover:border-[#C7D2FE] dark:hover:border-[#4F46E5]/50 hover:-translate-y-0.5 transition-all duration-300">
       <div
         onClick={onOpen}
-        className={`relative h-32 cursor-pointer bg-gradient-to-br ${gradient} flex items-center justify-center overflow-hidden`}
+        className={`relative h-32 cursor-pointer bg-gradient-to-br ${gradient} flex items-center justify-center overflow-hidden rounded-t-2xl active:scale-[0.98] transition-transform duration-150`}
       >
         <div className="transition-transform duration-300 group-hover:scale-110">
           <PlaceholderArt index={thumbIndex} tint={tint} size={64} />
@@ -35,8 +35,8 @@ export function RecentCard({
           title={isFavorite ? "Unfavorite" : "Favorite"}
           className={`absolute top-2.5 right-2.5 w-7 h-7 rounded-full flex items-center justify-center text-sm transition-all duration-200 ${
             isFavorite
-              ? "bg-white text-amber-500"
-              : "bg-white/70 text-[#9CA3AF] opacity-0 group-hover:opacity-100 hover:text-amber-500 hover:scale-110"
+              ? "bg-white dark:bg-[#232838] text-amber-500"
+              : "bg-white/70 dark:bg-[#232838]/70 text-[#9CA3AF] dark:text-[#64748B] opacity-0 group-hover:opacity-100 hover:text-amber-500 hover:scale-110"
           }`}
         >
           {isFavorite ? "★" : "☆"}
@@ -54,23 +54,20 @@ export function RecentCard({
                 if (e.key === "Enter") onCommitRename();
                 if (e.key === "Escape") onCancelRename();
               }}
-              className="text-sm font-semibold border border-[#4F46E5]/50 rounded-lg px-2 py-1 outline-none flex-1 min-w-0"
+              className="text-sm font-semibold bg-white dark:bg-[#14171F] text-[#111827] dark:text-[#E0E0E0] border border-[#4F46E5]/50 rounded-lg px-2 py-1 outline-none flex-1 min-w-0"
             />
           ) : (
             <h3
               onDoubleClick={onRename}
               title={board.name}
-              className="text-sm font-semibold text-[#111827] truncate cursor-text transition-colors duration-200 group-hover:text-[#4F46E5]"
+              className="text-base font-bold text-[#111827] dark:text-[#E0E0E0] truncate cursor-text transition-colors duration-200 group-hover:text-[#4F46E5] dark:group-hover:text-[#818CF8]"
             >
               {board.name}
             </h3>
           )}
           <CardMenu open={menuOpen} onToggle={onToggleMenu} onRename={onRename} onDelete={onDelete} />
         </div>
-        <p className="text-xs text-[#9CA3AF] mt-1">Updated {timeAgo(board.updatedAt)}</p>
-        <div className="mt-2.5">
-          <Avatar />
-        </div>
+        <p className="text-sm font-normal text-[#9CA3AF] dark:text-[#64748B] mt-1">Updated {timeAgo(board.updatedAt)}</p>
       </div>
     </div>
   );
@@ -94,7 +91,7 @@ export function BoardRow({
   onToggleMenu,
 }) {
   return (
-    <div className="group flex items-center gap-3.5 px-4 py-3 hover:bg-[#F5F6FF] transition-colors duration-200">
+    <div className="group flex items-center gap-3.5 px-4 py-3 hover:bg-[#F5F6FF] dark:hover:bg-[#232838] transition-colors duration-200">
       <div
         onClick={onOpen}
         className="w-11 h-11 rounded-lg bg-gradient-to-br from-slate-100 to-slate-200 flex items-center justify-center shrink-0 cursor-pointer overflow-hidden transition-transform duration-200 group-hover:scale-105"
@@ -113,31 +110,29 @@ export function BoardRow({
               if (e.key === "Enter") onCommitRename();
               if (e.key === "Escape") onCancelRename();
             }}
-            className="text-sm font-semibold border border-[#4F46E5]/50 rounded-lg px-2 py-1 outline-none w-full max-w-xs"
+            className="text-sm font-semibold bg-white dark:bg-[#14171F] text-[#111827] dark:text-[#E0E0E0] border border-[#4F46E5]/50 rounded-lg px-2 py-1 outline-none w-full max-w-xs"
           />
         ) : (
           <p
             onDoubleClick={onStartRename}
             onClick={onOpen}
             title={board.name}
-            className="text-sm font-semibold text-[#111827] truncate cursor-pointer transition-colors duration-200 group-hover:text-[#4F46E5]"
+            className="text-base font-bold text-[#111827] dark:text-[#E0E0E0] truncate cursor-pointer transition-colors duration-200 group-hover:text-[#4F46E5] dark:group-hover:text-[#818CF8]"
           >
             {board.name}
           </p>
         )}
-        <p className="text-xs text-[#9CA3AF]">Updated {timeAgo(board.updatedAt)}</p>
+        <p className="text-sm font-normal text-[#9CA3AF] dark:text-[#64748B]">Updated {timeAgo(board.updatedAt)}</p>
       </div>
 
-      <span className="hidden sm:block text-xs text-[#9CA3AF] w-28 shrink-0">
+      <span className="hidden sm:block text-xs text-[#9CA3AF] dark:text-[#64748B] w-28 shrink-0">
         {formatDate(board.createdAt ?? board.updatedAt)}
       </span>
-
-      <Avatar />
 
       <button
         onClick={onToggleFavorite}
         title={isFavorite ? "Unfavorite" : "Favorite"}
-        className={`text-sm transition-all duration-200 ${isFavorite ? "text-amber-500" : "text-[#D1D5DB] hover:text-amber-500 hover:scale-110"}`}
+        className={`text-sm transition-all duration-200 ${isFavorite ? "text-amber-500" : "text-[#D1D5DB] dark:text-[#334155] hover:text-amber-500 hover:scale-110"}`}
       >
         {isFavorite ? "★" : "☆"}
       </button>
@@ -150,12 +145,12 @@ export function BoardRow({
 // ── Empty state ──────────────────────────────────────────────────────────
 export function EmptyState({ onCreate }) {
   return (
-    <div className="db-fade-up flex flex-col items-center justify-center text-center py-24 rounded-2xl bg-white border border-dashed border-[#E5E7EB]">
-      <div className="w-20 h-20 rounded-full bg-[#F3F4F6] flex items-center justify-center mb-5">
+    <div className="db-fade-up flex flex-col items-center justify-center text-center py-24 rounded-2xl bg-white dark:bg-[#1E2432] border border-dashed border-[#E5E7EB] dark:border-[#333B4D]">
+      <div className="w-20 h-20 rounded-full bg-[#F3F4F6] dark:bg-[#14171F] flex items-center justify-center mb-5">
         <PlaceholderArt index={2} tint={{ stroke: "#9CA3AF", fill: "#E5E7EB" }} size={40} />
       </div>
-      <h3 className="text-base font-bold text-[#111827] mb-1.5">Create your first board</h3>
-      <p className="text-sm text-[#6B7280] mb-6 max-w-xs">
+      <h3 className="text-base font-bold text-[#111827] dark:text-[#E0E0E0] mb-1.5">Create your first board</h3>
+      <p className="text-sm text-[#6B7280] dark:text-[#64748B] mb-6 max-w-xs">
         Your whiteboards will show up here. Start sketching your first idea.
       </p>
       <button
