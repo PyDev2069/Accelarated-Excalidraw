@@ -155,4 +155,4 @@ function WhiteboardPage() {
   );
 }
 
-export default WhiteboardPage;
+export default WhiteboardPage
