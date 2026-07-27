@@ -203,6 +203,9 @@ function DashboardPage() {
               </section>
             )}
 
+            <br></br>
+            <br></br>
+
             {/* ── ALL BOARDS ───────────────────────────────────────── */}
             <section className="db-fade-up" style={{ animationDelay: "0.09s" }}>
               <div className="flex items-center justify-between mb-3.5">
