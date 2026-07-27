@@ -209,14 +209,14 @@ function DashboardPage() {
                 <h2 className="text-base font-extrabold text-[#0B1120] dark:text-[#E0E0E0]">My Boards</h2>
                 <div className="flex items-center gap-3">
                   <span className="text-xs text-[#9CA3AF] dark:text-[#64748B]">{visibleBoards.length} board{visibleBoards.length !== 1 ? "s" : ""}</span>
-                  <FilterSelect value={starFilter} onChange={setStarFilter} options={STAR_FILTERS} icon="⭐" />
+                  <FilterSelect value={starFilter} onChange={setStarFilter} options={STAR_FILTERS} icon={starFilter === "starred" ? "⭐" : ""} />
                 </div>
               </div>
 
               {visibleBoards.length === 0 ? (
                 <p className="text-[#6B7280] dark:text-[#64748B] text-sm py-14 text-center">No boards match your filters.</p>
               ) : view === "list" ? (
-                <div className="bg-white dark:bg-[#1E2432] border border-[#E5E7EB] dark:border-[#333B4D] rounded-2xl divide-y divide-[#F1F1F3] dark:divide-[#333B4D] overflow-hidden transition-colors duration-300">
+                <div className="bg-white dark:bg-[#1E2432] border border-[#E5E7EB] dark:border-[#333B4D] rounded-2xl divide-y divide-[#F1F1F3] dark:divide-[#333B4D] [&>*:first-child]:rounded-t-2xl [&>*:last-child]:rounded-b-2xl transition-colors duration-300">
                   {visibleBoards.map((board, i) => (
                     <BoardRow
                       key={board.id}
@@ -272,6 +272,3 @@ function DashboardPage() {
 }
 
 export default DashboardPage;
-
-
-       

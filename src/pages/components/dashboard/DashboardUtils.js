@@ -58,11 +58,11 @@ export function formatDate(ts) {
 
 // Muted gradient pairs cycled per thumbnail — background for the vector art.
 export const THUMB_GRADIENTS = [
-  "from-slate-200 to-slate-300",
-  "from-indigo-100 to-indigo-200",
-  "from-amber-100 to-orange-200",
-  "from-emerald-100 to-teal-200",
-  "from-rose-100 to-pink-200",
+  "from-slate-50 to-slate-100",
+  "from-indigo-50 to-indigo-100",
+  "from-amber-50 to-orange-50",
+  "from-emerald-50 to-teal-50",
+  "from-rose-50 to-pink-50",
 ];
 
 // Stroke/fill colors paired to each gradient above, used by the placeholder art.

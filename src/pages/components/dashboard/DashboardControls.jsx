@@ -1,3 +1,5 @@
+import { useEffect, useRef } from "react";
+
 // ── Small "you" avatar badge ────────────────────────────────────────────
 export function Avatar() {
   return (
@@ -95,9 +97,22 @@ export function ViewToggle({ view, onChange }) {
 }
 
 // ── "..." dropdown menu ──────────────────────────────────────────────────
-export function CardMenu({ open, onToggle, onRename, onDelete }) {
+export function CardMenu({ open, onToggle, onRename, onDelete, isFavorite, onToggleFavorite }) {
+  const menuRef = useRef(null);
+
+  useEffect(() => {
+    if (!open) return;
+    function handleClickOutside(e) {
+      if (menuRef.current && !menuRef.current.contains(e.target)) {
+        onToggle();
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [open, onToggle]);
+
   return (
-    <div className="relative">
+    <div className="relative" ref={menuRef}>
       <button
         onClick={(e) => { e.stopPropagation(); onToggle(); }}
         className="w-7 h-7 rounded-lg flex items-center justify-center text-[#9CA3AF] dark:text-[#64748B] hover:bg-[#EEF2FF] dark:hover:bg-[#262C3D] hover:text-[#4F46E5] dark:hover:text-[#818CF8] transition-colors duration-200"
@@ -107,8 +122,19 @@ export function CardMenu({ open, onToggle, onRename, onDelete }) {
       {open && (
         <div
           onClick={(e) => e.stopPropagation()}
-          className="absolute right-0 top-8 z-20 w-36 bg-white dark:bg-[#232838] border border-[#E5E7EB] dark:border-[#333B4D] rounded-xl shadow-lg py-1 text-sm"
+          className="absolute right-0 top-8 z-20 w-40 bg-white dark:bg-[#232838] border border-[#E5E7EB] dark:border-[#333B4D] rounded-xl shadow-lg py-1 text-sm"
         >
+          {onToggleFavorite && (
+            <button
+              onClick={onToggleFavorite}
+              className="w-full flex items-center gap-2 text-left px-3 py-2 text-[#111827] dark:text-[#E0E0E0] hover:bg-[#EEF2FF] dark:hover:bg-[#262C3D] hover:text-[#4F46E5] dark:hover:text-[#818CF8] transition-colors duration-200"
+            >
+              <span className={isFavorite ? "text-amber-500" : "text-[#9CA3AF] dark:text-[#64748B]"}>
+                {isFavorite ? "★" : "☆"}
+              </span>
+              {isFavorite ? "Remove from starred" : "Add to starred"}
+            </button>
+          )}
           <button onClick={onRename} className="w-full text-left px-3 py-2 text-[#111827] dark:text-[#E0E0E0] hover:bg-[#EEF2FF] dark:hover:bg-[#262C3D] hover:text-[#4F46E5] dark:hover:text-[#818CF8] transition-colors duration-200">
             Rename
           </button>
@@ -120,4 +146,3 @@ export function CardMenu({ open, onToggle, onRename, onDelete }) {
     </div>
   );
 }
-
