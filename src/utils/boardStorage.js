@@ -87,7 +87,7 @@ export function deleteBoard(id) {
 }
 
 
-
+// ─── code snippets (per shape, per language) ────────────────────────────────
 
 const snippetsKey = (boardId) => `boards:snippets:${boardId}`;
 
@@ -101,22 +101,72 @@ export function loadSnippets(boardId) {
 
 // snippets[elementId] is now { python: "...", javascript: "...", ... }
 // each language key is independent
-export function saveSnippet(boardId, elementId, language, code) {
+// One snippet per element: snippets[elementId] = { code, language }
+export function saveSnippet(boardId, elementId, code, language) {
   const all = loadSnippets(boardId);
-  if (!all[elementId]) all[elementId] = {};
-  all[elementId][language] = code;
+  all[elementId] = { code, language };
   localStorage.setItem(snippetsKey(boardId), JSON.stringify(all));
 }
 
-export function deleteSnippet(boardId, elementId, language) {
+export function deleteSnippet(boardId, elementId) {
   const all = loadSnippets(boardId);
-  if (!all[elementId]) return;
-  // if language passed, delete just that language's code
-  // if no language passed, delete all snippets for the element
-  if (language) {
-    delete all[elementId][language];
-  } else {
-    delete all[elementId];
-  }
+  if (!(elementId in all)) return;
+  delete all[elementId];
   localStorage.setItem(snippetsKey(boardId), JSON.stringify(all));
+}
+
+
+// ─── links (reference URLs per shape) ───────────────────────────────────────
+// Same pattern as snippets, but simpler: one URL per element, not one per
+// language. links[elementId] is just a plain string.
+
+const linksKey = (boardId) => `boards:links:${boardId}`;
+
+export function loadLinks(boardId) {
+  try {
+    return JSON.parse(localStorage.getItem(linksKey(boardId)) || "{}");
+  } catch {
+    return {};
+  }
+}
+
+export function saveLink(boardId, elementId, url) {
+  const all = loadLinks(boardId);
+  all[elementId] = url;
+  localStorage.setItem(linksKey(boardId), JSON.stringify(all));
+}
+
+export function deleteLink(boardId, elementId) {
+  const all = loadLinks(boardId);
+  if (!(elementId in all)) return;
+  delete all[elementId];
+  localStorage.setItem(linksKey(boardId), JSON.stringify(all));
+}
+
+
+// ─── notes (free-text note per shape) ───────────────────────────────────────
+// Same pattern as links: one note per element, stored as a plain string.
+// notes[elementId] is just a plain string.
+
+const notesKey = (boardId) => `boards:notes:${boardId}`;
+
+export function loadNotes(boardId) {
+  try {
+    return JSON.parse(localStorage.getItem(notesKey(boardId)) || "{}");
+  } catch {
+    return {};
+  }
+}
+
+export function saveNote(boardId, elementId, note) {
+  const all = loadNotes(boardId);
+  all[elementId] = note;
+  localStorage.setItem(notesKey(boardId), JSON.stringify(all));
+}
+
+export function deleteNote(boardId, elementId) {
+  const all = loadNotes(boardId);
+  if (!(elementId in all)) return;
+  delete all[elementId];
+  localStorage.setItem(notesKey(boardId), JSON.stringify(all));
 }
