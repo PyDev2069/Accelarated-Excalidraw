@@ -10,9 +10,11 @@ import {
   loadSnippets,
   loadLinks,
   loadNotes,
+  loadFiles,
 } from "../utils/boardStorage";
 import CodeSidebar, { isSupportedElement } from "../components/CodeSidebar";
 import LinksSidebar from "../components/LinksSidebar";
+import ShapeFileBox from "../components/ShapeFileBox";
 
 const AUTOSAVE_DEBOUNCE = 1000;
 const PANEL_DEFAULT_WIDTH = 320;
@@ -51,8 +53,6 @@ const TAB_THEME = {
   dark: { wrapBg: "#26233A", wrapBorder: "#332F4A", activeBg: "#1B1A27", activeColor: "#C9C6F5", inactiveColor: "#8A85B8", activeShadow: "0 1px 3px rgba(0,0,0,0.4)" },
 };
 
-// ── Sidebar column background (fills the gap between the tab bar and the
-// card so the page's white background never peeks through the margins) ──
 const PANEL_COLUMN_BG = { light: "#ffffff", dark: "#14131C" };
 
 function getPanelTabsStyle(t) {
@@ -128,10 +128,15 @@ function WhiteboardPage() {
   const [snippets, setSnippets] = useState({});
   const [links, setLinks] = useState({});
   const [notes, setNotes] = useState({});
+  const [files, setFiles] = useState({});
   const [activePanel, setActivePanel] = useState("code"); // "code" | "link"
   const [ready, setReady] = useState(false);
   const [panelWidth, setPanelWidth] = useState(PANEL_DEFAULT_WIDTH);
   const [isDarkTheme, setIsDarkTheme] = useState(false);
+  // Live Excalidraw appState (scroll/zoom/offset) — needed to convert the
+  // selected shape's scene coordinates into real screen pixels for
+  // ShapeFileBox's floating position. Updated on every canvas change.
+  const [liveAppState, setLiveAppState] = useState(null);
 
   useEffect(() => {
     const data = loadBoard(boardId);
@@ -149,6 +154,7 @@ function WhiteboardPage() {
     setSnippets(loadSnippets(boardId));
     setLinks(loadLinks(boardId));
     setNotes(loadNotes(boardId));
+    setFiles(loadFiles(boardId));
     setReady(true);
   }, [boardId, navigate]);
 
@@ -161,6 +167,9 @@ function WhiteboardPage() {
   function handleNoteChange() {
     setNotes(loadNotes(boardId));
   }
+  function handleFilesChange() {
+    setFiles(loadFiles(boardId));
+  }
 
   const handleChange = useCallback(
     (elements, appState) => {
@@ -172,6 +181,7 @@ function WhiteboardPage() {
       }, AUTOSAVE_DEBOUNCE);
 
       setIsDarkTheme(appState.theme === "dark");
+      setLiveAppState(appState);
 
       const selectedIds = Object.keys(appState.selectedElementIds || {}).filter(
         (id) => appState.selectedElementIds[id]
@@ -289,10 +299,6 @@ function WhiteboardPage() {
               height: "100%",
               width: panelWidth,
               flexShrink: 0,
-              // Fills the whole column with the theme's background so the
-              // page's white base never shows through the gaps around the
-              // card (the tab bar's own background covers itself, but the
-              // margin/padding areas around cs-wrap/ls-wrap were transparent).
               background: panelColumnBg,
             }}
           >
@@ -346,6 +352,18 @@ function WhiteboardPage() {
           </div>
         )}
       </div>
+
+      {/* Floating file-attachment box — tracks the selected shape's
+          on-screen position; lives outside the sidebar column since it
+          needs to sit directly over the canvas, above the shape itself. */}
+      <ShapeFileBox
+        boardId={boardId}
+        selectedElement={selectedElement}
+        appState={liveAppState}
+        files={files}
+        onFilesChange={handleFilesChange}
+        dark={isDarkTheme}
+      />
     </div>
   );
 }

@@ -56,12 +56,18 @@ export function saveBoard(id, elements, appState) {
   // Only persist the appState fields that are safe to restore.
   // Saving the full appState includes Maps, Sets, and other non-serialisable
   // values that silently corrupt on JSON round-trip.
+  //
+  // `theme` is included so dark mode survives a page reload — without it,
+  // isDarkTheme in WhiteboardPage.jsx resets to light every reload even if
+  // Excalidraw's own canvas remembers it was dark, causing a mismatch
+  // between the canvas and the top bar / sidebar theme.
   const cleanAppState = {
     viewBackgroundColor: appState.viewBackgroundColor,
     gridSize: appState.gridSize,
     scrollX: appState.scrollX,
     scrollY: appState.scrollY,
     zoom: appState.zoom,
+    theme: appState.theme,
   };
 
   localStorage.setItem(dataKey(id), JSON.stringify({ elements: cleanElements, appState: cleanAppState }));
@@ -80,10 +86,18 @@ export function renameBoard(id, newName) {
   writeIndex(index);
 }
 
-/** Deletes a board entirely. */
+/**
+ * Deletes a board entirely — including its snippets, links, notes, and
+ * files, so nothing orphaned is left behind in localStorage under a
+ * boardId that no longer has a board.
+ */
 export function deleteBoard(id) {
   writeIndex(readIndex().filter((m) => m.id !== id));
   localStorage.removeItem(dataKey(id));
+  localStorage.removeItem(snippetsKey(id));
+  localStorage.removeItem(linksKey(id));
+  localStorage.removeItem(notesKey(id));
+  localStorage.removeItem(filesKey(id));
 }
 
 
@@ -99,8 +113,6 @@ export function loadSnippets(boardId) {
   }
 }
 
-// snippets[elementId] is now { python: "...", javascript: "...", ... }
-// each language key is independent
 // One snippet per element: snippets[elementId] = { code, language }
 export function saveSnippet(boardId, elementId, code, language) {
   const all = loadSnippets(boardId);
@@ -169,4 +181,41 @@ export function deleteNote(boardId, elementId) {
   if (!(elementId in all)) return;
   delete all[elementId];
   localStorage.setItem(notesKey(boardId), JSON.stringify(all));
+}
+
+
+// ─── files (one uploaded file per shape) ──────────────────────────────────
+// Same key/JSON pattern as snippets/notes/links. Each file is stored as
+// { name, type, size, dataURL, uploadedAt }. dataURL is a base64 data URI —
+// keep MAX_FILE_SIZE in ShapeFileBox.jsx conservative, since this all lives
+// in localStorage (small quota, shared across the whole app, and base64
+// inflates the real file size by ~33%).
+
+const filesKey = (boardId) => `boards:files:${boardId}`;
+
+export function loadFiles(boardId) {
+  try {
+    return JSON.parse(localStorage.getItem(filesKey(boardId)) || "{}");
+  } catch {
+    return {};
+  }
+}
+
+export function saveFile(boardId, elementId, file) {
+  const all = loadFiles(boardId);
+  all[elementId] = file;
+  try {
+    localStorage.setItem(filesKey(boardId), JSON.stringify(all));
+  } catch (err) {
+    // Most likely QuotaExceededError — localStorage is full.
+    console.error("Failed to save file — localStorage may be full:", err);
+    throw new Error("Couldn't save file — storage is full. Try a smaller file or delete some existing attachments.");
+  }
+}
+
+export function deleteFile(boardId, elementId) {
+  const all = loadFiles(boardId);
+  if (!(elementId in all)) return;
+  delete all[elementId];
+  localStorage.setItem(filesKey(boardId), JSON.stringify(all));
 }
