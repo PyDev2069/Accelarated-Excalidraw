@@ -11,7 +11,9 @@ import {
   loadLinks,
   loadNotes,
   loadFiles,
+  loadChat,
 } from "../utils/boardStorage";
+import AIChatPanel from "../components/AIChatPanel";
 import CodeSidebar, { isSupportedElement } from "../components/CodeSidebar";
 import LinksSidebar from "../components/LinksSidebar";
 import ShapeFileBox from "../components/ShapeFileBox";
@@ -138,6 +140,12 @@ function WhiteboardPage() {
   // ShapeFileBox's floating position. Updated on every canvas change.
   const [liveAppState, setLiveAppState] = useState(null);
 
+  // AI Chat state
+  const [chatOpen, setChatOpen] = useState(false);
+  const [chatElements, setChatElements] = useState(null); // snapshot sent to AI
+  const [existingChat, setExistingChat] = useState(null); // null = new chat
+  const [savedChatExists, setSavedChatExists] = useState(false);
+
   useEffect(() => {
     const data = loadBoard(boardId);
     if (!data) {
@@ -155,6 +163,7 @@ function WhiteboardPage() {
     setLinks(loadLinks(boardId));
     setNotes(loadNotes(boardId));
     setFiles(loadFiles(boardId));
+    setSavedChatExists(!!loadChat(boardId));
     setReady(true);
   }, [boardId, navigate]);
 
@@ -262,6 +271,43 @@ function WhiteboardPage() {
           )}
         </div>
 
+        {/* Ask AI button */}
+        <button
+          onClick={() => {
+            const api = excalidrawAPIRef.current;
+            const elements = api ? api.getSceneElements() : [];
+            setChatElements(elements);
+            setExistingChat(null);
+            setChatOpen(true);
+          }}
+          title="Analyse this diagram with AI"
+          className={`inline-flex items-center gap-1.5 text-[13px] font-semibold ${nav.boardsBtn} rounded-lg px-3 py-1.5 transition-all duration-200 ease-out hover:-translate-y-0.5 active:translate-y-0 active:shadow-none`}
+        >
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 17l-6.2 4.3 2.4-7.4L2 9.4h7.6z"/>
+          </svg>
+          Ask AI
+        </button>
+
+        {/* View Chat — only when a saved chat exists */}
+        {savedChatExists && (
+          <button
+            onClick={() => {
+              const saved = loadChat(boardId);
+              setExistingChat(saved);
+              setChatElements(null);
+              setChatOpen(true);
+            }}
+            title="Open saved AI chat for this board"
+            className={`inline-flex items-center gap-1.5 text-[13px] font-semibold ${nav.boardsBtn} rounded-lg px-3 py-1.5 transition-all duration-200 ease-out hover:-translate-y-0.5 active:translate-y-0 active:shadow-none`}
+          >
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+            </svg>
+            Chat
+          </button>
+        )}
+
         <div className={`ml-auto flex items-center gap-1.5 text-[13px] ${nav.statusWrap} shrink-0`}>
           <span className="relative flex h-1.5 w-1.5">
             {saveStatus === "saved" && (
@@ -352,6 +398,21 @@ function WhiteboardPage() {
           </div>
         )}
       </div>
+
+      {/* AI Chat Panel — full-screen overlay */}
+      {chatOpen && (
+        <AIChatPanel
+          boardId={boardId}
+          initialElements={chatElements}
+          existingMessages={existingChat}
+          dark={isDarkTheme}
+          onClose={() => {
+            setChatOpen(false);
+            // Refresh "View Chat" button visibility
+            setSavedChatExists(!!loadChat(boardId));
+          }}
+        />
+      )}
 
       {/* Floating file-attachment box — tracks the selected shape's
           on-screen position; lives outside the sidebar column since it

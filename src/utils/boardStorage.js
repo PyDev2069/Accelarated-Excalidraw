@@ -219,3 +219,25 @@ export function deleteFile(boardId, elementId) {
   delete all[elementId];
   localStorage.setItem(filesKey(boardId), JSON.stringify(all));
 }
+// ─── AI Chat storage ─────────────────────────────────────────────────────────
+
+const chatKey = (boardId) => `boards:chat:${boardId}`;
+
+/** Load saved chat messages for a board. Returns [] if none. */
+export function loadChat(boardId) {
+  try {
+    return JSON.parse(localStorage.getItem(chatKey(boardId)) || "null") || null;
+  } catch {
+    return null;
+  }
+}
+
+/** Save chat messages for a board. */
+export function saveChat(boardId, messages) {
+  localStorage.setItem(chatKey(boardId), JSON.stringify(messages));
+}
+
+/** Delete saved chat for a board. */
+export function deleteChat(boardId) {
+  localStorage.removeItem(chatKey(boardId));
+}
