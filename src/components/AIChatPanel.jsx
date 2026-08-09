@@ -1,5 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { saveChat } from "../utils/boardStorage";
+import archieLogoDark from "../assets/archie-logo-dark.png";
+import archieLogoLight from "../assets/archie-logo-light.png";
 
 // Models
 const ANALYSIS_MODEL = "qwen2.5:3b";
@@ -176,6 +178,9 @@ function ZapIcon() {
 // ── Main component ────────────────────────────────────────────────────────────
 function AIChatPanel({ boardId, initialElements, onClose, existingMessages = null, dark = false }) {
   const t = dark ? THEME.dark : THEME.light;
+  // Light-mode UI -> dark-badge logo (pops on the light navbar).
+  // Dark-mode UI -> light-badge logo (pops on the dark navbar).
+  const archieLogo = dark ? archieLogoDark : archieLogoLight;
   const [messages, setMessages] = useState(existingMessages || []);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
@@ -311,21 +316,21 @@ function AIChatPanel({ boardId, initialElements, onClose, existingMessages = nul
           <div style={{ width: 1, height: 20, background: t.divider }} />
 
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            <div style={{
-              width: 28, height: 28, borderRadius: 8,
-              background: t.lavenderBg,
-              border: `1px solid ${t.lavenderBorder}`,
-              display: "flex", alignItems: "center", justifyContent: "center",
-              color: t.lavender,
-            }}>
-              <SparkleIcon />
-            </div>
+            <img
+              src={archieLogo}
+              alt="Archie"
+              style={{
+                width: 28, height: 28, borderRadius: 8,
+                objectFit: "cover",
+                border: `1px solid ${t.lavenderBorder}`,
+              }}
+            />
             <div>
               <div style={{ fontSize: 14, fontWeight: 700, color: t.heading, lineHeight: 1.2 }}>
-                AI Analysis
+                Archie AI
               </div>
               <div style={{ fontSize: 11, color: t.textMuted, lineHeight: 1 }}>
-                {crossQuestionMode ? "Cross-question · fast mode" : "Diagram review"}
+                {crossQuestionMode ? "Quip mode · fast follow-ups" : "Diagram review"}
               </div>
             </div>
           </div>
@@ -374,17 +379,18 @@ function AIChatPanel({ boardId, initialElements, onClose, existingMessages = nul
             alignItems: "center", justifyContent: "center", padding: "60px 24px",
             gap: 14, color: t.textMuted,
           }}>
-            <div style={{
-              width: 48, height: 48, borderRadius: 14,
-              background: t.lavenderBg, border: `1px solid ${t.lavenderBorder}`,
-              display: "flex", alignItems: "center", justifyContent: "center",
-              color: t.lavender,
-            }}>
-              <SparkleIcon />
-            </div>
+            <img
+              src={archieLogo}
+              alt="Archie"
+              style={{
+                width: 48, height: 48, borderRadius: 14,
+                objectFit: "cover",
+                border: `1px solid ${t.lavenderBorder}`,
+              }}
+            />
             <div style={{ textAlign: "center" }}>
               <div style={{ fontSize: 15, fontWeight: 600, color: t.heading, marginBottom: 4 }}>
-                {loading ? "Analysing your diagram…" : "Starting analysis"}
+                {loading ? "Archie is analysing your diagram…" : "Starting analysis"}
               </div>
               <div style={{ fontSize: 13, color: t.textMuted }}>
                 {loading ? "This may take a few seconds" : ""}
@@ -448,7 +454,7 @@ function AIChatPanel({ boardId, initialElements, onClose, existingMessages = nul
               value={input}
               onChange={e => setInput(e.target.value)}
               onKeyDown={handleKeyDown}
-              placeholder={crossQuestionMode ? "Quick follow-up…" : "Ask a follow-up question…"}
+              placeholder={crossQuestionMode ? "Quip it to Archie…" : "Ask Archie a follow-up question…"}
               disabled={loading}
               rows={1}
               style={{
@@ -515,14 +521,14 @@ function AIChatPanel({ boardId, initialElements, onClose, existingMessages = nul
               <span style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 12, color: t.textMuted, fontWeight: 500 }}>
                 <ZapIcon style={{ color: crossQuestionMode ? t.lavender : t.textMuted }} />
                 <span style={{ color: crossQuestionMode ? t.subheading : t.textMuted }}>
-                  Cross-question mode
+                  Quip mode
                 </span>
                 {crossQuestionMode && (
                   <span style={{
                     fontSize: 10, padding: "1px 6px", borderRadius: 999,
                     background: t.lavenderBg, color: t.lavender,
                     border: `1px solid ${t.lavenderBorder}`, fontWeight: 600,
-                  }}>fast</span>
+                  }}>Quip</span>
                 )}
               </span>
             </label>
@@ -564,7 +570,7 @@ function MessageBubble({ msg, t, streaming = false }) {
           textTransform: "uppercase", marginBottom: 6,
           color: isUser ? t.subheading : t.textMuted,
         }}>
-          {isUser ? "You" : "AI"}
+          {isUser ? "You" : "Archie"}
         </div>
         <pre style={{
           margin: 0, fontSize: 14, lineHeight: 1.65,
