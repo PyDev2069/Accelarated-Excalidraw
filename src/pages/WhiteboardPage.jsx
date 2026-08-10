@@ -17,6 +17,9 @@ import AIChatPanel from "../components/AIChatPanel";
 import CodeSidebar, { isSupportedElement } from "../components/CodeSidebar";
 import LinksSidebar from "../components/LinksSidebar";
 import ShapeFileBox from "../components/ShapeFileBox";
+import { CleanupModal, CleanupProgressOverlay, CleanupErrorToast, CleanupSuccessToast } from "../components/CleanupModal";
+import { SelectionCleanupButton } from "../components/SelectionCleanupButton";
+import { cleanupElements } from "../utils/cleanupEngine";
 import archieLogoDark from "../assets/archie-logo-light.png";
 import archieLogoLight from "../assets/archie-logo-dark.png";
 
@@ -148,6 +151,15 @@ function WhiteboardPage() {
   const [existingChat, setExistingChat] = useState(null); // null = new chat
   const [savedChatExists, setSavedChatExists] = useState(false);
 
+  // Cleanup state
+  // cleanupPending: null | { scope: "selection"|"board", scopeIds: Set|null }
+  const [cleanupPending, setCleanupPending] = useState(null);
+  const [cleanupRunning, setCleanupRunning] = useState(false);
+  const [cleanupProgress, setCleanupProgress] = useState("");
+  const [cleanupError, setCleanupError] = useState(null);
+  const [cleanupSuccess, setCleanupSuccess] = useState(null); // { count }
+  const [selectedElements, setSelectedElements] = useState([]); // multi-select
+
   useEffect(() => {
     const data = loadBoard(boardId);
     if (!data) {
@@ -182,6 +194,9 @@ function WhiteboardPage() {
     setFiles(loadFiles(boardId));
   }
 
+  // Track previous selected-id key to skip setState on scroll/zoom (no selection change)
+  const prevSelectedKeyRef = useRef("");
+
   const handleChange = useCallback(
     (elements, appState) => {
       setSaveStatus("saving");
@@ -197,11 +212,24 @@ function WhiteboardPage() {
       const selectedIds = Object.keys(appState.selectedElementIds || {}).filter(
         (id) => appState.selectedElementIds[id]
       );
+
+      // Only update selection state when the selected-id set actually changes
+      const selectedKey = selectedIds.slice().sort().join(",");
+      if (selectedKey === prevSelectedKeyRef.current) return;
+      prevSelectedKeyRef.current = selectedKey;
+
       if (selectedIds.length === 1) {
         const el = elements.find((e) => e.id === selectedIds[0]);
         setSelectedElement(isSupportedElement(el) ? el : null);
+        setSelectedElements([]);
+      } else if (selectedIds.length > 1) {
+        setSelectedElement(null);
+        setSelectedElements(
+          elements.filter((e) => selectedIds.includes(e.id) && !e.isDeleted)
+        );
       } else {
         setSelectedElement(null);
+        setSelectedElements([]);
       }
     },
     [boardId]
@@ -216,6 +244,53 @@ function WhiteboardPage() {
     renameBoard(boardId, trimmed);
     setBoardName(trimmed);
     setIsRenamingName(false);
+  }
+
+  // ── Cleanup handlers ────────────────────────────────────────────────────
+  function requestCleanupSelection() {
+    if (selectedElements.length < 2) return;
+    setCleanupPending({
+      scope: "selection",
+      scopeIds: new Set(selectedElements.map((e) => e.id)),
+    });
+  }
+
+  function requestCleanupBoard() {
+    const api = excalidrawAPIRef.current;
+    if (!api) return;
+    setCleanupPending({ scope: "board", scopeIds: null });
+  }
+
+  async function executeCleanup() {
+    if (!cleanupPending) return;
+    setCleanupPending(null);
+    setCleanupRunning(true);
+    setCleanupError(null);
+
+    const api = excalidrawAPIRef.current;
+    if (!api) { setCleanupRunning(false); return; }
+
+    const elements = api.getSceneElements();
+    const scopeCount = cleanupPending.scopeIds
+      ? cleanupPending.scopeIds.size
+      : elements.filter((e) => !e.isDeleted).length;
+
+    try {
+      const updated = await cleanupElements(elements, {
+        onProgress: (msg) => setCleanupProgress(msg),
+        scopeIds: cleanupPending.scopeIds,
+      });
+
+      // Push to Excalidraw's scene — this is undo-able
+      api.updateScene({ elements: updated });
+
+      setCleanupSuccess({ count: scopeCount });
+    } catch (err) {
+      setCleanupError(err.message || "Cleanup failed.");
+    } finally {
+      setCleanupRunning(false);
+      setCleanupProgress("");
+    }
   }
 
   const nav = isDarkTheme ? NAV_THEME.dark : NAV_THEME.light;
@@ -323,6 +398,26 @@ function WhiteboardPage() {
     />
   </span>
 </button>
+
+        {/* Global Board Cleanup */}
+        <button
+          onClick={requestCleanupBoard}
+          title="Clean up & organise the entire board with AI"
+          className={`inline-flex items-center gap-2 text-[13px] font-semibold
+            ${nav.boardsBtn}
+            rounded-lg px-3 py-1.5
+            transition-all duration-200 ease-out
+            hover:-translate-y-0.5
+            active:translate-y-0
+            active:shadow-none
+          `}
+        >
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M9.06 11.9l8.07-8.06a2.85 2.85 0 1 1 4.03 4.03l-8.06 8.08"/>
+            <path d="M7.07 14.94c-1.66 0-3 1.35-3 3.02 0 1.33-2.5 1.52-2 2.02 1 1 2.08 1.02 3.99 1.02 1.66 0 3-1.34 3-3.02 0-1.67-1.34-3.04-3-3.04z"/>
+          </svg>
+          <span>Clean up</span>
+        </button>
 
         {/* View Chat — only when a saved chat exists */}
         {savedChatExists && (
@@ -460,6 +555,56 @@ function WhiteboardPage() {
         onFilesChange={handleFilesChange}
         dark={isDarkTheme}
       />
+
+      {/* ── Cleanup: floating button above multi-selection ─────────────── */}
+      <SelectionCleanupButton
+        selectedElements={selectedElements}
+        appState={liveAppState}
+        dark={isDarkTheme}
+        onCleanup={requestCleanupSelection}
+      />
+
+      {/* ── Cleanup: confirmation modal ────────────────────────────────── */}
+      {cleanupPending && !cleanupRunning && (
+        <CleanupModal
+          dark={isDarkTheme}
+          scope={cleanupPending.scope}
+          count={
+            cleanupPending.scopeIds
+              ? cleanupPending.scopeIds.size
+              : (excalidrawAPIRef.current?.getSceneElements() ?? []).filter((e) => !e.isDeleted).length
+          }
+          onConfirm={executeCleanup}
+          onCancel={() => setCleanupPending(null)}
+        />
+      )}
+
+      {/* ── Cleanup: progress overlay ──────────────────────────────────── */}
+      {cleanupRunning && (
+        <CleanupProgressOverlay
+          dark={isDarkTheme}
+          message={cleanupProgress}
+          onCancel={() => setCleanupRunning(false)}
+        />
+      )}
+
+      {/* ── Cleanup: error toast ───────────────────────────────────────── */}
+      {cleanupError && (
+        <CleanupErrorToast
+          dark={isDarkTheme}
+          message={cleanupError}
+          onDismiss={() => setCleanupError(null)}
+        />
+      )}
+
+      {/* ── Cleanup: success toast ─────────────────────────────────────── */}
+      {cleanupSuccess && (
+        <CleanupSuccessToast
+          dark={isDarkTheme}
+          count={cleanupSuccess.count}
+          onDismiss={() => setCleanupSuccess(null)}
+        />
+      )}
     </div>
   );
 }
