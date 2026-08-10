@@ -17,6 +17,8 @@ import AIChatPanel from "../components/AIChatPanel";
 import CodeSidebar, { isSupportedElement } from "../components/CodeSidebar";
 import LinksSidebar from "../components/LinksSidebar";
 import ShapeFileBox from "../components/ShapeFileBox";
+import archieLogoDark from "../assets/archie-logo-light.png";
+import archieLogoLight from "../assets/archie-logo-dark.png";
 
 const AUTOSAVE_DEBOUNCE = 1000;
 const PANEL_DEFAULT_WIDTH = 320;
@@ -272,22 +274,55 @@ function WhiteboardPage() {
         </div>
 
         {/* Ask AI button */}
-        <button
-          onClick={() => {
-            const api = excalidrawAPIRef.current;
-            const elements = api ? api.getSceneElements() : [];
-            setChatElements(elements);
-            setExistingChat(null);
-            setChatOpen(true);
-          }}
-          title="Analyse this diagram with AI"
-          className={`inline-flex items-center gap-1.5 text-[13px] font-semibold ${nav.boardsBtn} rounded-lg px-3 py-1.5 transition-all duration-200 ease-out hover:-translate-y-0.5 active:translate-y-0 active:shadow-none`}
-        >
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 17l-6.2 4.3 2.4-7.4L2 9.4h7.6z"/>
-          </svg>
-          Ask AI
-        </button>
+  {/* Ask Archie */}
+<button
+  onClick={() => {
+    const api = excalidrawAPIRef.current;
+    const elements = api ? api.getSceneElements() : [];
+
+    setChatElements(elements);
+    setExistingChat(null);
+    setChatOpen(true);
+  }}
+  title="Analyse this diagram with Archie"
+  className={`inline-flex items-center gap-2 text-[13px] font-semibold
+    ${nav.boardsBtn}
+    rounded-lg px-3 py-1.5
+    transition-all duration-200 ease-out
+    hover:-translate-y-0.5
+    active:translate-y-0
+    active:shadow-none
+  `}
+>
+  {/* AI sparkle icon */}
+  <svg
+    width="13"
+    height="13"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
+    <path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 17l-6.2 4.3 2.4-7.4L2 9.4h7.6z" />
+  </svg>
+
+  <span>Ask Archie</span>
+
+  {/* Archie logo */}
+  <span
+    className={`flex items-center justify-center w-6 h-6 rounded-md ${
+      isDarkTheme ? "bg-[#332F4A]" : "bg-white"
+    } shadow-sm`}
+  >
+    <img
+      src={isDarkTheme ? archieLogoDark : archieLogoLight}
+      alt="Archie"
+      className="w-4 h-4 object-contain"
+    />
+  </span>
+</button>
 
         {/* View Chat — only when a saved chat exists */}
         {savedChatExists && (
