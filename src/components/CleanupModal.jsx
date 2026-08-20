@@ -103,8 +103,7 @@ export function CleanupModal({ dark, scope, count, onConfirm, onCancel }) {
           <span style={{ fontSize: 14, flexShrink: 0, marginTop: 1 }}>⚠️</span>
           <span style={{ fontSize: 12, color: dark ? "#F5A524" : "#92400E", lineHeight: 1.5 }}>
             This will move elements on the canvas. You can undo with{" "}
-            <strong>Ctrl+Z / ⌘Z</strong> immediately after. Requires Ollama
-            running locally with <code style={{ fontFamily: "monospace" }}>qwen2.5:3b</code>.
+            <strong>Ctrl+Z / ⌘Z</strong> immediately after.             
           </span>
         </div>
 
