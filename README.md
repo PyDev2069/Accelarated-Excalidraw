@@ -40,7 +40,7 @@ A one-click "Open" button jumps straight to the resource, so a box in your
 architecture diagram can point directly at the real thing it represents
 instead of just labeling it.
 
-![Reference links demo](./src/assets/links.gif)
+![Reference links demo](./src/assets/Links_Storage.gif)
 
 ### 🧠 AI-Based Diagram Generation & Chat
 Ask Archie, the built-in local AI assistant, to explain what's happening on
@@ -58,7 +58,7 @@ Files, AI chat — tucked away until you actually need it, appearing only
 when a shape is selected and disappearing the moment it isn't. Your sketch
 stays the thing you're actually looking at, not the toolbar around it.
 
-![Clutter-free canvas demo](./src/assets/clutter.gif)
+![Clutter-free canvas demo](./src/assets/Mess_Cleanup.gif)
 
 ### 💻 Sample Code Upload
 Attach a real code snippet, with language selection, or a free-text note
