@@ -50,7 +50,7 @@ also drives one-click Cleanup: it groups related shapes, arranges them into
 a tidy grid, and sets aside stray pencil scratches into their own area
 instead of guessing wrong and deleting something you actually wanted.
 
-![AI diagram generation and Archie chat demo](./src/assets/archie.gif)
+![AI diagram generation and Archie chat demo](./src/assets/Archie_Chat.gif)
 
 ### ✨ Clutter-Free Canvas
 A distraction-free workspace that keeps every panel — Code, Notes, Links,
